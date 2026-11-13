@@ -36,17 +36,7 @@ export const DEFAULT_SYSTEM_USERS: ProvisionalUser[] = [
     role: "admin",
     createdAt: "2026-01-01T00:00:00.000Z",
     isActive: true,
-    notes: "Cuenta maestra de administración (también acepta usuario 'admin').",
-  },
-  {
-    id: "sys-client-demo",
-    clientName: "Cliente Invitado (Provisional)",
-    username: "cliente@traffikerdigital.com",
-    password: "demo2026",
-    role: "client",
-    createdAt: "2026-01-01T00:00:00.000Z",
-    isActive: true,
-    notes: "Acceso provisional predeterminado para pruebas y clientes (también acepta usuario 'invitado').",
+    notes: "Cuenta maestra de administración (acepta 'admin' o 'admin@traffikerdigital.com').",
   },
 ];
 
@@ -58,7 +48,10 @@ export function getProvisionalUsers(): ProvisionalUser[] {
   try {
     const raw = localStorage.getItem(USERS_STORAGE_KEY);
     const customUsers: ProvisionalUser[] = raw ? JSON.parse(raw) : [];
-    return [...DEFAULT_SYSTEM_USERS, ...customUsers];
+    const cleanedCustom = customUsers.filter(
+      (u) => u.id !== "sys-client-demo" && u.id !== "sys-admin-1"
+    );
+    return [...DEFAULT_SYSTEM_USERS, ...cleanedCustom];
   } catch {
     return DEFAULT_SYSTEM_USERS;
   }
@@ -246,7 +239,7 @@ export function authenticateUser(
   if (!cleanUser || !cleanPass) {
     return {
       success: false,
-      error: "Por favor introduce tu usuario y contraseña provisional.",
+      error: "Por favor introduce tu usuario y contraseña de acceso.",
     };
   }
 
@@ -254,17 +247,18 @@ export function authenticateUser(
 
   const matched = allUsers.find((u) => {
     const uname = u.username.toLowerCase();
-    // Allow shorthand 'admin' for admin@traffikerdigital.com and 'invitado'/'cliente' for cliente@traffikerdigital.com
+    const cname = u.clientName.toLowerCase();
+    // Shorthand 'admin' for master account
     const isShorthandAdmin =
       u.id === "sys-admin-1" && (cleanUser === "admin" || cleanUser === uname);
-    const isShorthandClient =
-      u.id === "sys-client-demo" &&
-      (cleanUser === "invitado" || cleanUser === "cliente" || cleanUser === uname);
 
-    return (
-      (uname === cleanUser || isShorthandAdmin || isShorthandClient) &&
-      u.password === cleanPass
-    );
+    // Accept username, shorthand 'admin', or matching client name
+    const matchesIdentity =
+      uname === cleanUser ||
+      isShorthandAdmin ||
+      cname === cleanUser;
+
+    return matchesIdentity && u.password === cleanPass;
   });
 
   if (!matched) {
@@ -277,7 +271,7 @@ export function authenticateUser(
   if (!matched.isActive) {
     return {
       success: false,
-      error: "Esta cuenta provisional ha sido desactivada por el administrador.",
+      error: "Esta cuenta provisional ha sido pausada o desactivada por el administrador.",
     };
   }
 

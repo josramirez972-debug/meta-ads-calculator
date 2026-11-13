@@ -69,7 +69,6 @@ export default function AdminPage() {
   const [newUsername, setNewUsername] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [newValidDays, setNewValidDays] = useState<number>(15);
-  const [newNotes, setNewNotes] = useState("");
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
   // Leads
@@ -144,18 +143,16 @@ export default function AdminPage() {
     if (!newUsername.trim() || !newPassword.trim()) return;
 
     createProvisionalUser({
-      clientName: newClientName || "Cliente Invitado",
-      username: newUsername,
-      password: newPassword,
-      validDays: newValidDays === 0 ? null : newValidDays,
-      notes: newNotes,
+      clientName: newClientName.trim() || "Cliente Provisional",
+      username: newUsername.trim(),
+      password: newPassword.trim(),
+      validDays: newValidDays,
     });
 
     setProvisionalUsers(getProvisionalUsers());
     setNewClientName("");
     setNewUsername("");
     setNewPassword("");
-    setNewNotes("");
     setSavedNotice("Acceso provisional creado exitosamente. Ya puedes copiar la invitación para tu cliente.");
     setTimeout(() => setSavedNotice(""), 4000);
   };
@@ -189,7 +186,6 @@ ${magicLink}
 🔑 *Credenciales de Acceso:*
 • *Usuario:* ${user.username}
 • *Contraseña:* ${user.password}
-• *Código de Invitación:* ${token}
 (${expText})`;
 
     try {
@@ -391,38 +387,38 @@ ${magicLink}
               </span>
               <h3 className="text-lg font-black text-white flex items-center gap-2 mt-0.5">
                 <UserPlus className="w-5 h-5 text-[#FF5A1F]" />
-                Crear Login Provisional para Cliente
+                Crear Login Provisional
               </h3>
               <p className="text-xs text-[#CBD2DC] mt-1 leading-relaxed">
-                Crea un usuario temporal y envía la invitación por WhatsApp o enlace directo para que tu cliente pruebe la calculadora desde cualquier dispositivo.
+                Crea una cuenta temporal solo con nombre, correo y clave, y define su vigencia (3, 7 o 15 días).
               </p>
             </div>
 
             <form onSubmit={handleCreateProvisionalUser} className="space-y-4">
               <div>
                 <label className="block text-xs font-bold text-white uppercase tracking-wider mb-1">
-                  Nombre del Cliente o Empresa
+                  Nombre del Cliente
                 </label>
                 <input
                   type="text"
                   required
                   value={newClientName}
                   onChange={(e) => setNewClientName(e.target.value)}
-                  placeholder="Ej: Clínica Dental Sonrisas"
+                  placeholder="Ej: Clínica Dental Sonrisas o Pedro Pérez"
                   className="w-full bg-[#0D0F12] border border-[#292E36] rounded-xl px-3.5 py-2.5 text-white text-xs sm:text-sm focus:outline-none focus:border-[#FF5A1F]"
                 />
               </div>
 
               <div>
                 <label className="block text-xs font-bold text-white uppercase tracking-wider mb-1">
-                  Usuario o Correo de Acceso
+                  Correo o Usuario de Acceso
                 </label>
                 <input
                   type="text"
                   required
                   value={newUsername}
                   onChange={(e) => setNewUsername(e.target.value)}
-                  placeholder="Ej: sonrisas@cliente.com o clinica1"
+                  placeholder="Ej: cliente@correo.com o clinica1"
                   className="w-full bg-[#0D0F12] border border-[#292E36] rounded-xl px-3.5 py-2.5 text-white text-xs sm:text-sm focus:outline-none focus:border-[#FF5A1F]"
                 />
               </div>
@@ -452,38 +448,41 @@ ${magicLink}
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-white uppercase tracking-wider mb-1">
-                  Tiempo de Vigencia del Acceso
+                <label className="block text-xs font-bold text-white uppercase tracking-wider mb-2">
+                  Tiempo de Vigencia
                 </label>
-                <select
-                  value={newValidDays}
-                  onChange={(e) => setNewValidDays(Number(e.target.value))}
-                  className="w-full bg-[#0D0F12] border border-[#292E36] rounded-xl px-3.5 py-2.5 text-white text-xs sm:text-sm focus:outline-none focus:border-[#FF5A1F]"
-                >
-                  <option value={3}>3 días (Prueba rápida)</option>
-                  <option value={7}>7 días (1 semana)</option>
-                  <option value={15}>15 días (Recomendado)</option>
-                  <option value={30}>30 días (1 mes)</option>
-                  <option value={0}>Ilimitado (Sin fecha de expiración)</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-white uppercase tracking-wider mb-1">
-                  Nota interna (Opcional)
-                </label>
-                <input
-                  type="text"
-                  value={newNotes}
-                  onChange={(e) => setNewNotes(e.target.value)}
-                  placeholder="Ej: Prospecto reunión martes..."
-                  className="w-full bg-[#0D0F12] border border-[#292E36] rounded-xl px-3.5 py-2.5 text-white text-xs focus:outline-none focus:border-[#FF5A1F]"
-                />
+                <div className="grid grid-cols-3 gap-2">
+                  {[
+                    { days: 3, label: "3 días", desc: "Prueba rápida" },
+                    { days: 7, label: "7 días", desc: "1 semana" },
+                    { days: 15, label: "15 días", desc: "Recomendado" },
+                  ].map((opt) => (
+                    <button
+                      key={opt.days}
+                      type="button"
+                      onClick={() => setNewValidDays(opt.days)}
+                      className={`p-2.5 rounded-xl text-center border transition-all ${
+                        newValidDays === opt.days
+                          ? "bg-[#FF5A1F] text-white border-[#FF5A1F] shadow-lg shadow-[#FF5A1F]/20 font-black"
+                          : "bg-[#0D0F12] text-[#CBD2DC] border-[#292E36] hover:border-[#FF5A1F]/50 hover:text-white"
+                      }`}
+                    >
+                      <span className="block text-xs font-black">{opt.label}</span>
+                      <span
+                        className={`block text-[10px] ${
+                          newValidDays === opt.days ? "text-white/80" : "text-[#CBD2DC]/60"
+                        }`}
+                      >
+                        {opt.desc}
+                      </span>
+                    </button>
+                  ))}
+                </div>
               </div>
 
               <button
                 type="submit"
-                className="w-full bg-[#FF5A1F] hover:bg-[#e04e18] text-white font-black py-3 rounded-xl shadow-lg shadow-[#FF5A1F]/25 transition-all flex items-center justify-center gap-2 text-xs sm:text-sm"
+                className="w-full bg-[#FF5A1F] hover:bg-[#e04e18] text-white font-black py-3 rounded-xl shadow-lg shadow-[#FF5A1F]/25 transition-all flex items-center justify-center gap-2 text-xs sm:text-sm hover:scale-[1.01] active:scale-[0.99]"
               >
                 <UserPlus className="w-4 h-4" />
                 <span>CREAR ACCESO PROVISIONAL</span>
@@ -491,100 +490,153 @@ ${magicLink}
             </form>
           </div>
 
-          {/* Active Provisional Users List */}
+          {/* Provisional Users List */}
           <div className="lg:col-span-7 space-y-4">
+            {/* Master Admin Card */}
+            {provisionalUsers.find((u) => u.role === "admin") && (
+              <div className="bg-[#191C21] border border-[#FF5A1F]/40 rounded-2xl p-5 space-y-3 shadow-lg shadow-[#FF5A1F]/5">
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-2.5">
+                    <span className="w-9 h-9 rounded-xl bg-[#FF5A1F]/15 border border-[#FF5A1F]/30 flex items-center justify-center text-[#FF5A1F]">
+                      <ShieldCheck className="w-5 h-5" />
+                    </span>
+                    <div>
+                      <h4 className="text-sm font-black text-white">
+                        Administrador Traffiker Digital
+                      </h4>
+                      <span className="text-[10px] font-bold text-[#FF5A1F] uppercase tracking-wider block">
+                        Cuenta Maestra del Sistema
+                      </span>
+                    </div>
+                  </div>
+                  <span className="text-[10px] font-bold uppercase px-2.5 py-1 rounded-full bg-[#FF5A1F]/20 text-[#FF5A1F] border border-[#FF5A1F]/40">
+                    Acceso Permanente
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs pt-1">
+                  <div className="bg-[#0D0F12] p-2.5 rounded-xl border border-[#292E36]">
+                    <span className="text-[10px] text-[#CBD2DC] block">Usuario:</span>
+                    <span className="font-mono font-bold text-white">admin (o admin@traffikerdigital.com)</span>
+                  </div>
+                  <div className="bg-[#0D0F12] p-2.5 rounded-xl border border-[#292E36]">
+                    <span className="text-[10px] text-[#CBD2DC] block">Contraseña:</span>
+                    <span className="font-mono font-bold text-[#FF5A1F]">TraCol#2026J@</span>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Client Provisional Users Section */}
             <div className="bg-[#191C21] border border-[#292E36] rounded-2xl p-6 space-y-4">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-[#292E36] pb-3">
                 <div>
-                  <h3 className="text-base font-black text-white">
-                    Cuentas y Accesos Provisionales Activos
+                  <h3 className="text-base font-black text-white flex items-center gap-2">
+                    <Users className="w-4 h-4 text-[#FF5A1F]" />
+                    Clientes Provisionales Activos ({provisionalUsers.filter((u) => u.role !== "admin").length})
                   </h3>
                   <p className="text-xs text-[#CBD2DC]">
-                    Usa el botón <strong className="text-white">&quot;Copiar Invitación&quot;</strong> para enviar al cliente su enlace mágico y credenciales por WhatsApp.
+                    Usa <strong className="text-white">&quot;Copiar Invitación&quot;</strong> para enviar a tu cliente por WhatsApp sus datos de acceso.
                   </p>
                 </div>
               </div>
 
-              <div className="space-y-3">
-                {provisionalUsers.map((u) => {
-                  const isSystem = u.id.startsWith("sys-");
-                  const isExpired =
-                    u.expiresAt && new Date(u.expiresAt).getTime() < Date.now();
+              {provisionalUsers.filter((u) => u.role !== "admin").length === 0 ? (
+                <div className="text-center py-10 px-4 rounded-xl bg-[#0D0F12] border border-dashed border-[#292E36] space-y-2">
+                  <Users className="w-8 h-8 text-[#CBD2DC]/40 mx-auto" />
+                  <p className="text-xs font-bold text-white">
+                    Aún no has creado clientes provisionales
+                  </p>
+                  <p className="text-[11px] text-[#CBD2DC]/70 max-w-sm mx-auto">
+                    Usa el formulario de la izquierda con Nombre, Correo y Clave para generar un acceso de 3, 7 o 15 días para tu cliente.
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {provisionalUsers
+                    .filter((u) => u.role !== "admin")
+                    .map((u) => {
+                      const isExpired =
+                        u.expiresAt && new Date(u.expiresAt).getTime() < Date.now();
+                      const daysLeft = u.expiresAt
+                        ? Math.max(
+                            0,
+                            Math.ceil(
+                              (new Date(u.expiresAt).getTime() - Date.now()) /
+                                (1000 * 60 * 60 * 24)
+                            )
+                          )
+                        : null;
 
-                  return (
-                    <div
-                      key={u.id}
-                      className={`p-4 rounded-2xl bg-[#0D0F12] border transition-all space-y-3 ${
-                        !u.isActive || isExpired
-                          ? "border-[#292E36] opacity-60"
-                          : u.role === "admin"
-                          ? "border-[#FF5A1F]/50"
-                          : "border-[#292E36]"
-                      }`}
-                    >
-                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                        <div>
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <span className="font-black text-white text-sm">
-                              {u.clientName}
-                            </span>
-                            <span
-                              className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded border ${
-                                u.role === "admin"
-                                  ? "bg-[#FF5A1F]/15 text-[#FF5A1F] border-[#FF5A1F]/30"
-                                  : "bg-[#191C21] text-[#CBD2DC] border-[#292E36]"
-                              }`}
-                            >
-                              {u.role === "admin" ? "Administrador" : "Cliente Provisional"}
-                            </span>
-                            {isExpired && (
-                              <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded bg-red-500/20 text-red-300 border border-red-500/30">
-                                Expirado
-                              </span>
-                            )}
-                          </div>
-                          {u.notes && (
-                            <p className="text-[11px] text-[#CBD2DC] mt-0.5">
-                              {u.notes}
-                            </p>
-                          )}
-                        </div>
+                      return (
+                        <div
+                          key={u.id}
+                          className={`p-4 rounded-2xl bg-[#0D0F12] border transition-all space-y-3 ${
+                            !u.isActive || isExpired
+                              ? "border-[#292E36] opacity-60"
+                              : "border-[#292E36] hover:border-[#FF5A1F]/40"
+                          }`}
+                        >
+                          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                            <div>
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <span className="font-black text-white text-sm">
+                                  {u.clientName}
+                                </span>
+                                <span
+                                  className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded border ${
+                                    u.isActive && !isExpired
+                                      ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/30"
+                                      : "bg-red-500/10 text-red-400 border-red-500/30"
+                                  }`}
+                                >
+                                  {isExpired
+                                    ? "Expirado"
+                                    : u.isActive
+                                    ? "Activo"
+                                    : "Pausado"}
+                                </span>
+                                {daysLeft !== null && !isExpired && (
+                                  <span className="text-[10px] font-bold text-[#FF5A1F] bg-[#FF5A1F]/10 px-2 py-0.5 rounded border border-[#FF5A1F]/20">
+                                    {daysLeft === 1 ? "1 día restante" : `${daysLeft} días restantes`}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
 
-                        <div className="flex items-center gap-1.5">
-                          <button
-                            type="button"
-                            onClick={() => handleCopyInviteMessage(u)}
-                            className="px-3 py-1.5 rounded-xl bg-[#FF5A1F] hover:bg-[#e04e18] text-white text-xs font-bold flex items-center gap-1.5 transition-all"
-                          >
-                            {copiedId === u.id ? (
-                              <>
-                                <Check className="w-3.5 h-3.5" />
-                                <span>¡Copiado!</span>
-                              </>
-                            ) : (
-                              <>
-                                <Share2 className="w-3.5 h-3.5" />
-                                <span>Copiar Invitación</span>
-                              </>
-                            )}
-                          </button>
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                              <button
+                                type="button"
+                                onClick={() => handleCopyInviteMessage(u)}
+                                className="px-3 py-1.5 rounded-xl bg-[#FF5A1F] hover:bg-[#e04e18] text-white text-xs font-bold flex items-center gap-1.5 transition-all"
+                              >
+                                {copiedId === u.id ? (
+                                  <>
+                                    <Check className="w-3.5 h-3.5" />
+                                    <span>¡Copiado!</span>
+                                  </>
+                                ) : (
+                                  <>
+                                    <Share2 className="w-3.5 h-3.5" />
+                                    <span>Copiar Invitación</span>
+                                  </>
+                                )}
+                              </button>
 
-                          <button
-                            type="button"
-                            onClick={() => handleCopyDirectLink(u)}
-                            className="px-2.5 py-1.5 rounded-xl bg-[#191C21] hover:bg-[#292E36] text-[#CBD2DC] hover:text-white border border-[#292E36] text-xs font-semibold flex items-center gap-1 transition-all"
-                            title="Copiar enlace de acceso directo"
-                          >
-                            {copiedId === `${u.id}-link` ? (
-                              <Check className="w-3.5 h-3.5 text-[#FF5A1F]" />
-                            ) : (
-                              <Copy className="w-3.5 h-3.5 text-[#FF5A1F]" />
-                            )}
-                            <span>Link</span>
-                          </button>
+                              <button
+                                type="button"
+                                onClick={() => handleCopyDirectLink(u)}
+                                className="px-2.5 py-1.5 rounded-xl bg-[#191C21] hover:bg-[#292E36] text-[#CBD2DC] hover:text-white border border-[#292E36] text-xs font-semibold flex items-center gap-1 transition-all"
+                                title="Copiar enlace directo"
+                              >
+                                {copiedId === `${u.id}-link` ? (
+                                  <Check className="w-3.5 h-3.5 text-[#FF5A1F]" />
+                                ) : (
+                                  <Copy className="w-3.5 h-3.5 text-[#FF5A1F]" />
+                                )}
+                                <span>Link</span>
+                              </button>
 
-                          {!isSystem && (
-                            <>
                               <button
                                 type="button"
                                 onClick={() => handleToggleUser(u.id)}
@@ -592,52 +644,52 @@ ${magicLink}
                               >
                                 {u.isActive ? "Pausar" : "Activar"}
                               </button>
+
                               <button
                                 type="button"
                                 onClick={() => handleDeleteUser(u.id)}
-                                className="p-1.5 rounded-xl bg-[#191C21] hover:bg-[#292E36] text-[#CBD2DC] hover:text-white border border-[#292E36]"
+                                className="p-1.5 rounded-xl bg-[#191C21] hover:bg-[#292E36] text-[#CBD2DC] hover:text-red-400 border border-[#292E36] transition-colors"
                                 title="Eliminar acceso"
                               >
                                 <Trash2 className="w-3.5 h-3.5" />
                               </button>
-                            </>
-                          )}
-                        </div>
-                      </div>
+                            </div>
+                          </div>
 
-                      {/* Credentials Box */}
-                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-2 border-t border-[#292E36] text-xs">
-                        <div className="bg-[#191C21] px-3 py-1.5 rounded-lg border border-[#292E36]">
-                          <span className="text-[10px] text-[#CBD2DC] block">
-                            Usuario:
-                          </span>
-                          <span className="font-mono font-bold text-white">
-                            {u.username}
-                          </span>
+                          {/* Credentials Details */}
+                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-2 border-t border-[#292E36] text-xs">
+                            <div className="bg-[#191C21] px-3 py-1.5 rounded-lg border border-[#292E36]">
+                              <span className="text-[10px] text-[#CBD2DC] block">
+                                Usuario / Correo:
+                              </span>
+                              <span className="font-mono font-bold text-white">
+                                {u.username}
+                              </span>
+                            </div>
+                            <div className="bg-[#191C21] px-3 py-1.5 rounded-lg border border-[#292E36]">
+                              <span className="text-[10px] text-[#CBD2DC] block">
+                                Contraseña:
+                              </span>
+                              <span className="font-mono font-bold text-[#FF5A1F]">
+                                {u.password}
+                              </span>
+                            </div>
+                            <div className="bg-[#191C21] px-3 py-1.5 rounded-lg border border-[#292E36]">
+                              <span className="text-[10px] text-[#CBD2DC] block">
+                                Vigencia:
+                              </span>
+                              <span className="font-semibold text-white">
+                                {u.expiresAt
+                                  ? `Hasta ${new Date(u.expiresAt).toLocaleDateString("es-ES")}`
+                                  : "Ilimitado"}
+                              </span>
+                            </div>
+                          </div>
                         </div>
-                        <div className="bg-[#191C21] px-3 py-1.5 rounded-lg border border-[#292E36]">
-                          <span className="text-[10px] text-[#CBD2DC] block">
-                            Contraseña:
-                          </span>
-                          <span className="font-mono font-bold text-[#FF5A1F]">
-                            {u.password}
-                          </span>
-                        </div>
-                        <div className="bg-[#191C21] px-3 py-1.5 rounded-lg border border-[#292E36]">
-                          <span className="text-[10px] text-[#CBD2DC] block">
-                            Vigencia:
-                          </span>
-                          <span className="font-semibold text-white">
-                            {u.expiresAt
-                              ? `Hasta ${new Date(u.expiresAt).toLocaleDateString("es-ES")}`
-                              : "Ilimitado"}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
+                      );
+                    })}
+                </div>
+              )}
             </div>
           </div>
         </div>

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
+import AuthGuard from "@/components/auth/AuthGuard";
 
 export const metadata: Metadata = {
   title: "META ADS ROI CALCULATOR | Traffiker Digital",
@@ -31,7 +32,7 @@ export default function RootLayout({
       >
         <Header />
         <main className="flex-1 max-w-7xl w-full mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-8">
-          {children}
+          <AuthGuard>{children}</AuthGuard>
         </main>
         <Footer />
       </body>
